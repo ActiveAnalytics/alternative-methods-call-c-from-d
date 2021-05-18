@@ -15,7 +15,14 @@ The code for this article can be found <a href="https://github.com/ActiveAnalyti
 
 ## Preliminaries
 
-D does have a `Complex` number data type but in this exercise we shall implemented a type based on `T[2]` (where `T` is a floating point type) which is in line with fftw underlying complex data type (`fftw_complex`) rather than the D library's <a href="" target="_blank">Complex type</a> based on `struct Complex(T){T re; T im}`. Why? Because we can be **absolutely** sure that an array of `T[2]` elements in D is the same as an array of `T[2]` elements in C for floating point types without have to consider anything else. While the type conversion of `fftw_complex` to D's `Complex` type is straightforward, we want to avoid the possibility of other issues with type conversion of arrays of complex numbers which we will do by directly changing the type signatures of the array blocks. It is probably over-cautious but it's the path taken here. Another reason for going this route is that writing our own complex type with basic functionality is relatively simple and fun, there's always more to learn.
+In the C fftw3 library, the complex data type for `double` is given by:
+
+```c
+typedef double fftw_complex[2];
+```
+
+
+D does have a `Complex` number data type but in this exercise we shall implemented a type based on `T[2]` (where `T` is a floating point type) which is in line with fftw's underlying complex data type above (`fftw_complex`) rather than the D library's <a href="" target="_blank">Complex type</a> based on `struct Complex(T){T re; T im}`. Why? Because we can be **absolutely** sure that an array of `T[2]` elements in D is the same as an array of `T[2]` elements in C for floating point types without having to consider anything else. While the type conversion of `fftw_complex` to D's `Complex` type is straightforward, we want to avoid the possibility of other issues with type conversion of arrays of complex numbers. Type conversion of arrays is done by directly changing the type signatures of the array blocks.
 
 ### Imports
 
@@ -57,7 +64,7 @@ if(isFloatingPoint!T)
 }
 ```
 
-Note that in D structs can not be declared with a `this(){//...}` constructor except to disable it using `@disable this();`. The D compiler itself autogenerates this constructor and it can only be disabled. The third constructor uses `auto ref` so that if an <a href="https://ddili.org/ders/d.en/lvalue_rvalue.html">lvalue</a> (named variable) is submitted it is passed as a reference and if an `rvalue` (literal) is submitted it is passed as a value type and copied.
+Note that in D structs can not be declared with a `this(){...}` constructor except to disable it using `@disable this();`, otherwise it is controlled by the compiler. The third constructor uses `auto ref` so that if an <a href="https://ddili.org/ders/d.en/lvalue_rvalue.html">lvalue</a> (named variable) is submitted it is passed as a reference and if an `rvalue` (literal) is submitted it is passed as a value type and copied.
 
 Next the getters and setters for the real and imaginary part are given by:
 
@@ -159,7 +166,7 @@ if(isFloatingPoint!T)
 }
 ```
 
-Next the `opOpAssign` operator defines operations of the form `x op= y` where `op` is an arithmetic operator, so the addition and subtraction operators are given by:
+Next the `opOpAssign` operator defines operations of the form `x op= y` where `op` is an arithmetic operator for example `x += y` for addition. The addition and subtraction operators are given by:
 
 ```d
 struct Complex(T)
@@ -402,5 +409,3 @@ $ dmd callc_dstep.d fftw3.d -L-lfftw3 -L-lm && ./callc_dstep
 ## Summary
 
 This article gives an overview of the basics of calling C code from D using the native `extern (C)` interface and the `dstep` library. News of the possible new DMD compiler feature that will compile C code along with D allowing users to simply include C headers is great news, for further reducing friction calling C code which will be a boon to library writers and programmers alike.
-
-
