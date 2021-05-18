@@ -66,7 +66,7 @@ if(isFloatingPoint!T)
 
 Note that in D structs can not be declared with a `this(){...}` constructor except to disable it using `@disable this();`, otherwise it is controlled by the compiler. The third constructor uses `auto ref` so that if an <a href="https://ddili.org/ders/d.en/lvalue_rvalue.html">lvalue</a> (named variable) is submitted it is passed as a reference and if an `rvalue` (literal) is submitted it is passed as a value type and copied.
 
-Next the getters and setters for the real and imaginary part are given by:
+Next the getters and setters for the real and imaginary parts are given by:
 
 ```d
 struct Complex(T)
@@ -93,7 +93,7 @@ if(isFloatingPoint!T)
 }
 ```
 
-where the real and the imaginary part are the first and second elements of the one-dimensional array of length two. The `toString` method is used to create a string representation of the object for the output.
+where the real and the imaginary parts are the first and second elements of the one-dimensional array of length two. The `toString` method is used to create a string representation of the object for the output.
 
 ```d
 struct Complex(T)
@@ -127,7 +127,7 @@ if(isFloatingPoint!T)
 }
 ```
 
-The first casts from `Complex!(T)` to `T[]` and the second casts in the reverse direction. The output of an inverse one-dimensional DFT in fftw3 requires rescaling by the length of the array, so basic arithmetic operators of Complex numbers with *real* operands are implemented. Firstly binary operators for multiply and divide:
+The first operator casts from `Complex!(T)` to `T[]` and the second casts in the reverse direction. The output of an inverse one-dimensional DFT in fftw3 requires rescaling by the length of the array, so basic arithmetic operators of Complex numbers with *real* operands are implemented. Firstly binary operators for multiply and divide:
 
 ```d
 struct Complex(T)
@@ -285,7 +285,7 @@ auto toFFTWArray(Complex!double[] arr)
 
 Now that the preliminaries/supporting code has been described, we can declare the items from `fftw3` that we wish to import.
 
-```c
+```d
 extern (C)
 {
   // For chosing the algorithm to be used
@@ -300,7 +300,8 @@ extern (C)
   struct fftw_plan_s;
   alias fftw_plan = fftw_plan_s*;
   // Function for creating the execution plan
-  fftw_plan fftw_plan_dft_1d(int n, fftw_complex* in_, fftw_complex* out_, int sign, uint flags);
+  fftw_plan fftw_plan_dft_1d(int n, fftw_complex* in_, 
+            fftw_complex* out_, int sign, uint flags);
   // Function for carrying out the execution plan
   void fftw_execute(const fftw_plan p);
   // Function for destroying the plan
@@ -317,7 +318,8 @@ auto fft(Complex!double[] x)
   auto in_arr = x.toFFTWArray;
   auto out_arr = allocateFFTWArray(x.length);
   int n = cast(int)x.length;
-  auto plan_forward = fftw_plan_dft_1d(n, in_arr, out_arr, FFTW_FORWARD, FFTW_ESTIMATE);
+  auto plan_forward = fftw_plan_dft_1d(n, in_arr, out_arr, 
+            FFTW_FORWARD, FFTW_ESTIMATE);
   fftw_execute(plan_forward);
   fftw_destroy_plan(plan_forward);
   return out_arr.toComplexArray(x.length);
@@ -332,7 +334,8 @@ auto ifft(Complex!double[] x)
   auto in_arr = x.toFFTWArray;
   auto out_arr = allocateFFTWArray(x.length);
   int n = cast(int)x.length;
-  auto plan_backward = fftw_plan_dft_1d(n, in_arr, out_arr, FFTW_BACKWARD, FFTW_ESTIMATE);
+  auto plan_backward = fftw_plan_dft_1d(n, in_arr, 
+              out_arr, FFTW_BACKWARD, FFTW_ESTIMATE);
   fftw_execute(plan_backward);
   fftw_destroy_plan(plan_backward);
   auto inv_fft_arr = out_arr.toComplexArray(x.length);
