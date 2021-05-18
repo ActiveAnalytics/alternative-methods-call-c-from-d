@@ -28,7 +28,7 @@ D does have a `Complex` number data type but in this exercise we shall implement
 
 During this article you will see these functions used:
 
-```
+```d
 import std.stdio: writeln;
 import std.traits: isFloatingPoint, isNumeric;
 import std.conv: to;
