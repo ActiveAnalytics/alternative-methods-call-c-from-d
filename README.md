@@ -12,6 +12,8 @@ There are currently two main ways of calling C functions from D. The first is to
 
 To be clear, this article is *not* about Fast Fourier Transforms (FFT) (though there may be articles about this topic at a later stage). Using `fftw3` library serves as an example to the main aim of outlining the methods of calling C from D.
 
+The code for this article can be found <a href="https://github.com/ActiveAnalytics/alternative-methods-call-c-from-d" target="_blank">here</a>.
+
 ## Preliminaries
 
 D does have a `Complex` number data type but in this exercise we use a type we implemented based on `T[2]` (where `T` is a floating point type) which is in line with fftw underlying complex data type (`fftw_complex`) rather than the D library's <a href="" target="_blank">Complex type</a> based on `struct Complex(T){T re; T im}`. Why? Because we can be **absolutely** sure that an array of `T[2]` elements in D is the same as an array of `T[2]` elements in C for floating point types without have to consider anything else. While the type conversion of `fftw_complex` to D's `Complex` type is straightforward, we want to avoid the possibility of other issues with type conversion of arrays of complex numbers which we will do by directly changing the type signatures of the array blocks. This is probably over-cautious but it's the path taken here. Another reason for going this route is that writing our own complex type with basic functionality is relatively simple and fun, there's always more to learn. 
