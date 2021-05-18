@@ -3,12 +3,11 @@ author: "Dr Chibisi Chima-Okereke"
 date: 2021-05-16T19:48:47+01:00
 publishdate: 2021-05-18T05:34:47+01:00
 
-
 ## Introduction
 
-D has always had a close association with the C programming language, and it is relatively straightforward to call C functions from D. Recently, a pull request has been initiated on the <a href="https://github.com/dlang/dmd/" target="_blank">GitHub repository</a> of the D reference compiler DMD by <a href="https://twitter.com/WalterBright" target="_blank">Walter Bright</a> the originator of the language titled <a href="https://github.com/dlang/dmd/pull/12507" target="_blank">`add ImportC Compiler`</a>. This PR would allow D programmers to import and compile C files directly with D code, enabling a frictionless interface calling C from D. This is significant for many applications that integrate or are looking to integrate C libraries including the area of numerical computing. Many fundamental algorithms from BLAS, LAPACK, to FFTW have well supported open source C implementations, and enabling full integration with these libraries allows programmers to keep up with the latest changes and adopt new features easily. In addition, such a feature would ease the transition of prospective C programmers considering using D as a safe and more productive language.
+D has always had a close association with the C programming language, and it is relatively straightforward to call C functions from D. Recently, a pull request has been initiated on the <a href="https://github.com/dlang/dmd/" target="_blank">GitHub repository</a> of the D reference compiler DMD by <a href="https://twitter.com/WalterBright" target="_blank">Walter Bright</a> the originator of the language titled <a href="https://github.com/dlang/dmd/pull/12507" target="_blank">`add ImportC Compiler`</a>. This PR would allow D programmers to import and compile C files directly with D code, enabling a frictionless interface calling C from D. This is significant for many applications that integrate or are looking to integrate C libraries including the area of numerical computing. Many fundamental algorithms from BLAS, LAPACK, to FFTW have well supported open source C implementations, and the proposed changes would ease integration and allow programmers to keep up with the latest changes and adopt new features easily. In addition, such a feature would ease the transition of prospective C programmers considering using D as a safe and more productive language.
 
-There are currently two main ways of calling C functions from D. The first is to use `extern (C)` and then declare the function signature using directions in the <a href="https://dlang.org/spec/interfaceToC.html" target="_blank">language documentation</a>. A <a href="../interface-d-with-c-fortran/" target="_blank">previous article</a> describes some basics of this technique (which we shall repeat here in more detail). The other technique is to use the <a href="https://github.com/jacob-carlborg/dstep" target="_blank">dstep</a> package which converts C header files to D files containing the appropriate type definitions and signatures. A third option <a href="https://github.com/atilaneves/dpp" target="_blank">dpp</a> does exist but it is still in early developement. This article outlines how to use the basic native method for declaring C functions and how to use the dstep package to call C functions in D from the <a href="http://www.fftw.org/" target="_blank">fftw3</a> package (Fastest Fourier Transforms in the West). The example used in this article will be calling the function `fftw_plan_dft_1d` for a complex one-dimensional DFT (discrete fourier transform) from fftw3.
+There are currently two main ways of calling C functions from D. The first is to use `extern (C)` and then declare the function signature using directions in the <a href="https://dlang.org/spec/interfaceToC.html" target="_blank">language documentation</a>. A <a href="../interface-d-with-c-fortran/" target="_blank">previous article</a> describes some basics of this technique (which is also covered here). The other technique is to use the <a href="https://github.com/jacob-carlborg/dstep" target="_blank">dstep</a> package which converts C header files to D files containing the appropriate type definitions and signatures. A third option <a href="https://github.com/atilaneves/dpp" target="_blank">dpp</a> does exist but it is still in early developement. This article outlines how to use the basic native method for declaring C functions and how to use the dstep package to call C functions in D from the <a href="http://www.fftw.org/" target="_blank">fftw3</a> package (Fastest Fourier Transforms in the West). The example will create functions that call the library to carry out an FFT and inverse FFT.
 
 To be clear, this article is *not* about Fast Fourier Transforms (FFT) (though there may be articles about this topic at a later stage). Using `fftw3` library serves as an example to the main aim of outlining the methods of calling C from D.
 
@@ -16,11 +15,11 @@ The code for this article can be found <a href="https://github.com/ActiveAnalyti
 
 ## Preliminaries
 
-D does have a `Complex` number data type but in this exercise we use a type we implemented based on `T[2]` (where `T` is a floating point type) which is in line with fftw underlying complex data type (`fftw_complex`) rather than the D library's <a href="" target="_blank">Complex type</a> based on `struct Complex(T){T re; T im}`. Why? Because we can be **absolutely** sure that an array of `T[2]` elements in D is the same as an array of `T[2]` elements in C for floating point types without have to consider anything else. While the type conversion of `fftw_complex` to D's `Complex` type is straightforward, we want to avoid the possibility of other issues with type conversion of arrays of complex numbers which we will do by directly changing the type signatures of the array blocks. This is probably over-cautious but it's the path taken here. Another reason for going this route is that writing our own complex type with basic functionality is relatively simple and fun, there's always more to learn. 
+D does have a `Complex` number data type but in this exercise we shall implemented a type based on `T[2]` (where `T` is a floating point type) which is in line with fftw underlying complex data type (`fftw_complex`) rather than the D library's <a href="" target="_blank">Complex type</a> based on `struct Complex(T){T re; T im}`. Why? Because we can be **absolutely** sure that an array of `T[2]` elements in D is the same as an array of `T[2]` elements in C for floating point types without have to consider anything else. While the type conversion of `fftw_complex` to D's `Complex` type is straightforward, we want to avoid the possibility of other issues with type conversion of arrays of complex numbers which we will do by directly changing the type signatures of the array blocks. It is probably over-cautious but it's the path taken here. Another reason for going this route is that writing our own complex type with basic functionality is relatively simple and fun, there's always more to learn.
 
 ### Imports
 
-During this articles you will see these functions used:
+During this article you will see these functions used:
 
 ```
 import std.stdio: writeln;
@@ -87,7 +86,7 @@ if(isFloatingPoint!T)
 }
 ```
 
-where the real and the imaginary part are the first and second elements of the one dimensional array of length two. The `toString` method used to create a string representation of the object for the output.
+where the real and the imaginary part are the first and second elements of the one-dimensional array of length two. The `toString` method is used to create a string representation of the object for the output.
 
 ```d
 struct Complex(T)
@@ -102,7 +101,7 @@ if(isFloatingPoint!T)
 }
 ```
 
-The casting operators for casting to and from `T[]`
+Casting operators to and from `T[]`
 
 ```d
 struct Complex(T)
@@ -121,7 +120,7 @@ if(isFloatingPoint!T)
 }
 ```
 
-The first casts from `Complex!(T)` to `T[]` and the second casts in the reverse direction. The output of a reverse one dimensional DFT in fftw3 requires rescaling by the length of the array, so some basic arithmetic operators of Complex numbers with *real* operands is used. Firstly binary operators of multiply and divide:
+The first casts from `Complex!(T)` to `T[]` and the second casts in the reverse direction. The output of an inverse one-dimensional DFT in fftw3 requires rescaling by the length of the array, so basic arithmetic operators of Complex numbers with *real* operands are implemented. Firstly binary operators for multiply and divide:
 
 ```d
 struct Complex(T)
@@ -229,7 +228,7 @@ auto complex(T)(T[] x)
 
 ### Basic random number generator
 
-This function generates a one dimensional random array of complex numbers and defaults to `Complex!double` types.
+This function generates a one-dimensional random array of complex numbers and defaults to `Complex!double` types.
 
 ```d
 auto randomComplexArray(T = double)(long n)
@@ -261,7 +260,7 @@ auto allocateFFTWArray(ulong n)
 
 ### Casting between `Complex!double[]` and `fftw_complex*`
 
-This is basically done by changing the type signature by casting through `void*` this is fine since the elements of both arrays are `double[2]`.
+This is done by changing the type signature by casting through `void*` this is fine since the elements of both arrays are `double[2]`.
 
 ```
 auto toComplexArray(fftw_complex* arr, ulong n)
@@ -360,15 +359,19 @@ Then compile and run with the flags `-lfftw3` and `-lm`:
 $ dmd callc_native.d -L-lfftw3 -L-lm && ./callc_native
 ```
 
+*When using the DMD compiler, C flags are passed with a `-L` prefix*.
+
 ## Calling fftw3 C functions from D using `dstep`
 
-The `dstep` library works by converting C header files to a D file with all the exported items within `extern (C)` so that there is no need to write the interface yourself, you simply compile the new file with your code as if it where just another module. The installation details for `dstep` can be found at the <a href="https://github.com/jacob-carlborg/dstep" target="_blank">GitHub page</a>. Once installed, using `dstep` is pretty easy. Simply run the dstep executable against the header file(s) containing the functionality you wish to use:
+The `dstep` library works by converting C header files to a D file with all the exported items within `extern (C)` so there is no need to write the interface yourself, you simply compile the new file with your code as if it where just another module. The installation details for `dstep` can be found at the <a href="https://github.com/jacob-carlborg/dstep" target="_blank">GitHub page</a>.
+
+Once installed, using `dstep` is pretty easy. Simply run the `dstep` command executable against the header file(s) containing the functionality you wish to use:
 
 ```bash
 $ dstep fftw3.h
 ```
 
-Which produces a D file `fftw3.d`. Sometimes `dstep` makes conversion errors. In this case we see
+The above command creates a D file `fftw3.d`. However `dstep` sometimes makes conversion errors. In this case we see
 
 ```d
 //...
@@ -398,5 +401,6 @@ $ dmd callc_dstep.d fftw3.d -L-lfftw3 -L-lm && ./callc_dstep
 
 ## Summary
 
-This article gives a summary of the basics for calling C code from D using the native `extern (C)` interface and the `dstep` library. News of the possible new DMD compiler feature that will compile C code along with D allowing users to simply include C headers files is great news, for further reducing friction calling C code which will be a boon to library writers and programmers alike.
+This article gives a good overview of the basics of calling C code from D using the native `extern (C)` interface and the `dstep` library. News of the possible new DMD compiler feature that will compile C code along with D allowing users to simply include C headers is great news, for further reducing friction calling C code which will be a boon to library writers and programmers alike.
+
 
