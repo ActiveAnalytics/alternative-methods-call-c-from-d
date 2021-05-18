@@ -401,6 +401,6 @@ $ dmd callc_dstep.d fftw3.d -L-lfftw3 -L-lm && ./callc_dstep
 
 ## Summary
 
-This article gives a good overview of the basics of calling C code from D using the native `extern (C)` interface and the `dstep` library. News of the possible new DMD compiler feature that will compile C code along with D allowing users to simply include C headers is great news, for further reducing friction calling C code which will be a boon to library writers and programmers alike.
+This article gives an overview of the basics of calling C code from D using the native `extern (C)` interface and the `dstep` library. News of the possible new DMD compiler feature that will compile C code along with D allowing users to simply include C headers is great news, for further reducing friction calling C code which will be a boon to library writers and programmers alike.
 
 
